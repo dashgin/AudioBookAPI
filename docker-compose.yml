@@ -6,7 +6,7 @@ services:
   web:
     build:
       context: ./audio_book
-      dockerfile: ./audio_book/Dockerfile
+      dockerfile: ./compose/Dockerfile
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./audio_book/:/app/

@@ -1,7 +1,5 @@
-DB_ENGINE=django.db.backends.postgresql
-DB_NAME=postgres_dev
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=db
-DB_PORT=5432
-DATABASE=postgres
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=audio_book
+POSTGRES_USER=!!!SET POSTGRES_USER!!!
+POSTGRES_PASSWORD=!!!SET POSTGRES_PASSWORD!!

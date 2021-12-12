@@ -1,5 +1,4 @@
-.env.prod
-.env.prod.db
+.envs/.prod
 
 # Created by https://www.toptal.com/developers/gitignore/api/django,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,visualstudiocode

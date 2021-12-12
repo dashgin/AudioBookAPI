@@ -1,0 +1,71 @@
+###########
+# BUILDER #
+###########
+
+# pull official base image
+FROM python:3.9.6-alpine as builder
+
+# set work directory
+WORKDIR /app
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install psycopg2 dependencies
+RUN apk update \
+    && apk add postgresql-dev gcc python3-dev musl-dev
+
+# lint
+RUN pip install --upgrade pip
+RUN pip install flake8==3.9.2
+COPY . .
+RUN flake8 --ignore=E501,F401 .
+
+# install dependencies
+COPY ./requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+
+
+###########
+## FINAL ##
+###########
+
+# pull official base image
+FROM python:3.9.6-alpine
+
+# create directory for the audio_book_server user
+RUN mkdir -p /home/audio_book_server
+
+# create the audio_book_server user
+RUN addgroup -S audio_book_server && adduser -S audio_book_server -G audio_book_server
+
+# create the appropriate directories
+ENV HOME=/home/audio_book_server
+ENV APP_HOME=/home/audio_book_server/web
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/staticfiles
+WORKDIR $APP_HOME
+
+# install dependencies
+RUN apk update && apk add libpq
+COPY --from=builder /app/wheels /wheels
+COPY --from=builder /app/requirements.txt .
+RUN pip install --no-cache /wheels/*
+
+# copy entrypoint.prod.sh
+COPY ./compose/entrypoint.prod.sh ./entrypoint.sh
+RUN sed -i 's/\r$//g'  $APP_HOME/entrypoint.prod.sh
+RUN chmod +x  $APP_HOME/entrypoint.prod.sh
+
+# copy project
+COPY . $APP_HOME
+
+# chown all the files to the audio_book_server user
+RUN chown -R audio_book_server:audio_book_server $APP_HOME
+
+# change to the audio_book_server user
+USER audio_book_server
+
+# run entrypoint.prod.sh
+ENTRYPOINT ["/home/audio_book_server/web/entrypoint.sh"]

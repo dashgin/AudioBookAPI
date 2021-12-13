@@ -29,7 +29,7 @@ services:
       - .envs/.prod/.django
       - .envs/.prod/.postgres
     depends_on:
-      - db
+      - postgres
     command: /start
 
   
@@ -40,4 +40,4 @@ services:
     ports:
       - "1337:80"
     depends_on:
-      - web
+      - django

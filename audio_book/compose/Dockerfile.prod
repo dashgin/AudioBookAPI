@@ -1,20 +1,33 @@
-###########
-# BUILDER #
-###########
+ARG PYTHON_VERSION=3.9-slim-bullseye
 
-# pull official base image
-FROM python:3.9.6-alpine as builder
+# define an alias for the specfic python version used in this file.
+FROM python:${PYTHON_VERSION} as python
 
-# set work directory
-WORKDIR /app
+# Python build stage
+FROM python as python-build-stage
 
-# set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ARG BUILD_ENVIRONMENT=production
 
-# install psycopg2 dependencies
-RUN apk update \
-    && apk add postgresql-dev gcc python3-dev musl-dev
+# Install apt packages
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  # dependencies for building Python packages
+  build-essential \
+  # psycopg2 dependencies
+  libpq-dev
+
+# Requirements are installed here to ensure they will be cached.
+COPY ./requirements.txt .
+
+# Create Python Dependency and Sub-Dependency Wheels.
+RUN pip wheel --wheel-dir /usr/src/app/wheels  \
+  -r requirements.txt
+
+# Python 'run' stage
+FROM python as python-run-stage
+
+ARG BUILD_ENVIRONMENT=production
+ARG APP_HOME=/app
+
 
 # lint
 RUN pip install --upgrade pip
@@ -22,50 +35,46 @@ RUN pip install flake8==3.9.2
 COPY . .
 RUN flake8 --ignore=E501,F401 .
 
-# install dependencies
-COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV BUILD_ENV ${BUILD_ENVIRONMENT}
+
+WORKDIR ${APP_HOME}
 
 
-###########
-## FINAL ##
-###########
+RUN addgroup --system django \
+    && adduser --system --ingroup django django
 
-# pull official base image
-FROM python:3.9.6-alpine
+# Install required system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  # psycopg2 dependencies
+  libpq-dev \
+  # Translations dependencies
+  gettext \
+  # cleaning up unused files
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+  && rm -rf /var/lib/apt/lists/*
 
-# create directory for the audio_book_server user
-RUN mkdir -p /home/audio_book_server
+# All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
+# copy python dependency wheels from python-build-stage
+COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 
-# create the audio_book_server user
-RUN addgroup -S audio_book_server && adduser -S audio_book_server -G audio_book_server
+# use wheels to install python dependencies
+RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
+  && rm -rf /wheels/
 
-# create the appropriate directories
-ENV HOME=/home/audio_book_server
-ENV APP_HOME=/home/audio_book_server/web
-RUN mkdir $APP_HOME
-RUN mkdir $APP_HOME/staticfiles
-WORKDIR $APP_HOME
+COPY --chown=django:django ./compose/entrypoint.prod.sh /entrypoint
+RUN sed -i 's/\r$//g' /entrypoint
+RUN chmod +x /entrypoint
 
-# install dependencies
-RUN apk update && apk add libpq
-COPY --from=builder /app/wheels /wheels
-COPY --from=builder /app/requirements.txt .
-RUN pip install --no-cache /wheels/*
+COPY --chown=django:django ./compose/start.prod.sh /start
+RUN sed -i 's/\r$//g' /start
+RUN chmod +x /start
 
-# copy entrypoint.prod.sh
-COPY ./compose/entrypoint.prod.sh ./entrypoint.sh
-RUN sed -i 's/\r$//g'  $APP_HOME/entrypoint.sh
-RUN chmod +x  $APP_HOME/entrypoint.sh
 
-# copy project
-COPY . $APP_HOME
+# make django owner of the WORKDIR directory as well.
+RUN chown django:django ${APP_HOME}
 
-# chown all the files to the audio_book_server user
-RUN chown -R audio_book_server:audio_book_server $APP_HOME
+USER django
 
-# change to the audio_book_server user
-USER audio_book_server
-
-# run entrypoint.prod.sh
-ENTRYPOINT ["/home/audio_book_server/web/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint"]

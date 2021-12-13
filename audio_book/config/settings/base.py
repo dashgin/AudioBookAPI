@@ -57,16 +57,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("POSTGRES_NAME", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("POSTGRES_USER", "user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "password"),
-        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-        "PORT": int(os.environ.get("POSTGRES_PORT", "5432")),
-    }
-}
+DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES["default"]["ATOMIC_REQUESTS"] = True
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -107,3 +101,11 @@ STATICFILES_DIRS = [str(BASE_DIR / "static")]
 
 MEDIA_ROOT = str(BASE_DIR / "media")
 MEDIA_URL = "/media/"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
+}

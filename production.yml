@@ -6,30 +6,32 @@ volumes:
   media_volume: { }
 
 services:
-  db:
-    image: postgres
+  postgres:
+    image: postgres:latest
 
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - .envs/.prod/.postgres
 
-  web:
+  django:
     build:
-      context: ./audio_book
+      context: .
       dockerfile: ./compose/Dockerfile.prod
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+
+    image: audio_book_production_django
+
     volumes:
-      - ./audio_book/:/home/audio_book_server/web
       - media_volume:/home/audio_book_server/media
       - static_volume:/home/audio_book_server/web/staticfiles
-    expose:
-      - 8000
+
     env_file:
       - .envs/.prod/.django
       - .envs/.prod/.postgres
     depends_on:
       - db
+    command: /start
+
   
   nginx:
     build: ./nginx

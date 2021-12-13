@@ -7,8 +7,10 @@ volumes:
 
 services:
   postgres:
-    image: postgres:latest
-
+    build:
+      context: .
+      dockerfile: ./compose/postgres/Dockerfile
+    image: audio_book_production_postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:

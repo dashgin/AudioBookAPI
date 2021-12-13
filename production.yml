@@ -16,8 +16,8 @@ services:
 
   django:
     build:
-      context: .
-      dockerfile: audio_book/compose/Dockerfile.prod
+      context: ./audio_book
+      dockerfile: compose/Dockerfile.prod
 
     image: audio_book_production_django
 

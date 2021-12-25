@@ -8,7 +8,7 @@ volumes:
 services:
   postgres:
     build:
-      context: .
+      context: ./audio_book
       dockerfile: ./compose/postgres/Dockerfile
     image: audio_book_production_postgres
     volumes:
@@ -24,8 +24,8 @@ services:
     image: audio_book_production_django
 
     volumes:
-      - media_volume:/home/audio_book_server/media
-      - static_volume:/home/audio_book_server/web/staticfiles
+      - media_volume:/app/media
+      - static_volume:/app/staticfiles
 
     env_file:
       - .envs/.prod/.django
@@ -36,9 +36,11 @@ services:
 
   
   nginx:
-    build: ./nginx
+    build:
+      context: ./
+      dockerfile: nginx/Dockerfile
     volumes:
-      - static_volume:/home/audio_book/web/staticfiles
+      - static_volume:/app/staticfiles
     ports:
       - "1337:80"
     depends_on:

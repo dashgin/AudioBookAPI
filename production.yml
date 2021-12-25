@@ -24,7 +24,7 @@ services:
     image: audio_book_production_django
 
     volumes:
-      - .:/app
+      - ./audio_book:/app
       - media_volume:/app/media
       - static_volume:/app/staticfiles
 
@@ -40,7 +40,7 @@ services:
       context: ./
       dockerfile: nginx/Dockerfile
     volumes:
-      - .:/app
+      - ./audio_book:/app
       - media_volume:/app/media
       - static_volume:/app/staticfiles
     ports:

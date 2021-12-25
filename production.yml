@@ -1,9 +1,9 @@
-version: '3.8'
+version: "3.8"
 
 volumes:
-  postgres_data: { }
-  static_volume: { }
-  media_volume: { }
+  postgres_data: {}
+  static_volume: {}
+  media_volume: {}
 
 services:
   postgres:
@@ -34,7 +34,6 @@ services:
       - postgres
     command: /start
 
-  
   nginx:
     build:
       context: ./

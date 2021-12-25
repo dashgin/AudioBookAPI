@@ -37,7 +37,7 @@ services:
 
   nginx:
     build:
-      context: ./
+      context: ./audio_book
       dockerfile: nginx/Dockerfile
     volumes:
       - ./audio_book:/app

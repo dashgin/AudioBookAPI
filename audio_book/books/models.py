@@ -27,12 +27,9 @@ class Chapter(models.Model):
 
 
 class Version(models.Model):
-    has_update = models.BooleanField(default=False)
+    version = models.CharField(max_length=10)
+    release_date = models.DateField()
+    change_log = models.TextField()
 
-class Update(models.Model):
-    version = models.ForeignKey(Version, on_delete=models.CASCADE)
-    date = models.DateField()
-    description = models.TextField()
-    
     def __str__(self):
         return self.version

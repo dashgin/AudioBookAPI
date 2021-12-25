@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from .models import Level, Book, Chapter
+from .models import Level, Book, Chapter, Version
+
+
+class VersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Version
+        fields = ('version', 'release_date', 'change_log',)
 
 
 class ChapterListSerializer(serializers.ModelSerializer):

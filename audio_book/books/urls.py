@@ -15,5 +15,5 @@ urlpatterns = [
     path('levels/<int:id>/', LevelDetailView.as_view(), name='level_detail'),
     path('books/<int:id>/', BookDetailView.as_view(), name='book_detail'),
     path('chapters/<int:id>/', ChapterDetailView.as_view(), name='chapter_detail'),
-    path('versions/last/', last_version_view, name='last_version')'),
+    path('versions/last/', last_version_view, name='last_version'),
 ]

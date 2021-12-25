@@ -9,7 +9,7 @@ class ChapterListSerializer(serializers.ModelSerializer):
         fields = ("id", "title", "audio", "subtitle")
 
 
-class ChapterDetailSerializer(serializers.Modelserializer):
+class ChapterDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chapter
         fields = ("id", "title", "audio", "subtitle")

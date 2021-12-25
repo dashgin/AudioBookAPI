@@ -19,8 +19,20 @@ class Book(models.Model):
 class Chapter(models.Model):
     title = models.CharField(max_length=100)
     book = models.ForeignKey(Book, related_name="chapters", on_delete=models.CASCADE)
-    audio = models.FileField(upload_to='audio/')
-    subtitle = models.FileField(upload_to='subtitle/')
+    audio = models.FileField(upload_to="audio/")
+    subtitle = models.FileField(upload_to="subtitle/")
 
     def __str__(self):
         return self.title
+
+
+class Version(models.Model):
+    has_update = models.BooleanField(default=False)
+
+class Update(models.Model):
+    version = models.ForeignKey(Version, on_delete=models.CASCADE)
+    date = models.DateField()
+    description = models.TextField()
+    
+    def __str__(self):
+        return self.version
